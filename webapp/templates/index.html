@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kemik Yaşı Tahmin Sistemi</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1923;
+      color: #e0e6ed;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a2a3a 0%, #0d2137 100%);
+      border-bottom: 2px solid #1e90ff33;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header .logo {
+      font-size: 28px;
+    }
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #e0f0ff;
+    }
+    header p {
+      font-size: 0.8rem;
+      color: #7fa8c8;
+      margin-top: 2px;
+    }
+    .badge {
+      margin-left: auto;
+      background: #1e90ff22;
+      border: 1px solid #1e90ff55;
+      color: #5ab3ff;
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 28px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #15232f;
+      border: 1px solid #1e3a52;
+      border-radius: 14px;
+      padding: 28px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #90c8f0;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Upload area ── */
+    .upload-area {
+      border: 2px dashed #2a5070;
+      border-radius: 10px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #0f1e2b;
+      position: relative;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: #1e90ff;
+      background: #0f2a40;
+    }
+    .upload-area .icon { font-size: 40px; margin-bottom: 10px; line-height: 1; }
+    .upload-area p { font-size: 0.88rem; color: #7fa8c8; }
+    .upload-area strong { color: #5ab3ff; }
+    #fileInput { display: none; }
+
+    /* ── Preview ── */
+    #preview-wrap {
+      display: none;
+      margin-top: 14px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #1e3a52;
+    }
+    #preview-wrap img {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      background: #000;
+      display: block;
+    }
+    #preview-name {
+      font-size: 0.78rem;
+      color: #5ab3ff;
+      background: #0f2236;
+      padding: 6px 10px;
+    }
+
+    /* ── Gender select ── */
+    .gender-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .gender-btn {
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid #1e3a52;
+      background: #0f1e2b;
+      color: #7fa8c8;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .gender-btn:hover { border-color: #2a6090; }
+    .gender-btn.selected {
+      border-color: #1e90ff;
+      background: #0e2d4a;
+      color: #e0f0ff;
+      font-weight: 600;
+    }
+    .gender-btn .g-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+    /* ── Analyze button ── */
+    #analyzeBtn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 9px;
+      border: none;
+      background: linear-gradient(135deg, #1a6ebc, #0d4f8f);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.3px;
+    }
+    #analyzeBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    #analyzeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Right panel ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Placeholder ── */
+    #placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 300px;
+      color: #3a6080;
+      gap: 12px;
+    }
+    #placeholder .ph-icon { font-size: 54px; }
+    #placeholder p { font-size: 0.9rem; }
+
+    /* ── Loading ── */
+    #loading { display: none; align-items: center; justify-content: center; min-height: 300px; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid #1e3a52;
+      border-top-color: #1e90ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Results ── */
+    #results { display: none; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .result-box {
+      background: #0f1e2b;
+      border: 1px solid #1e3a52;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .result-box .label {
+      font-size: 0.75rem;
+      color: #6a96b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .result-box .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #5ab3ff;
+    }
+    .result-box .sub {
+      font-size: 0.8rem;
+      color: #4a7a9a;
+      margin-top: 2px;
+    }
+    .result-box.highlight { border-color: #1e90ff55; background: #0e2d4a; }
+
+    /* Progress bar */
+    .progress-wrap { margin-bottom: 18px; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #6a96b8;
+      margin-bottom: 6px;
+    }
+    .progress-track {
+      height: 12px;
+      background: #1a3040;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #1e5090, #1e90ff);
+      transition: width 0.8s ease;
+    }
+
+    /* Stage info */
+    .stage-box {
+      background: #0f1e2b;
+      border-left: 3px solid #1e90ff;
+      border-radius: 0 8px 8px 0;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .stage-box .stage-name {
+      font-weight: 600;
+      color: #90c8f0;
+      margin-bottom: 4px;
+    }
+    .stage-box .stage-desc { font-size: 0.85rem; color: #7fa8c8; }
+
+    /* Report image */
+    #reportImg {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #1e3a52;
+      display: block;
+    }
+
+    /* Error */
+    #error-box {
+      display: none;
+      background: #2a0f0f;
+      border: 1px solid #7a1e1e;
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: #ff7070;
+      font-size: 0.9rem;
+    }
+
+    /* Disclaimer */
+    footer {
+      text-align: center;
+      color: #3a5a70;
+      font-size: 0.75rem;
+      padding: 24px;
+      border-top: 1px solid #1a2d3d;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🦴</div>
+  <div>
+    <h1>Kemik Yaşı Tahmin Sistemi</h1>
+    <p>El bilek röntgeni ile yapay zeka destekli kemik yaşı analizi</p>
+  </div>
+  <span class="badge">7 Model Ensemble · MAE ≈ 7.7 ay</span>
+</header>
+
+<main>
+  <!-- Left: Upload panel -->
+  <div class="card">
+    <h2>📤 Görüntü Yükle</h2>
+
+    <div class="upload-area" id="dropZone">
+      <div class="icon">
+        <!-- El röntgeni SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 100 120" fill="none">
+          <!-- Bilek kemikleri -->
+          <rect x="28" y="88" width="44" height="14" rx="5" fill="#5ab3ff" opacity="0.35"/>
+          <rect x="32" y="84" width="36" height="8"  rx="3" fill="#5ab3ff" opacity="0.25"/>
+          <!-- Avuç içi -->
+          <rect x="28" y="54" width="44" height="34" rx="6" fill="#5ab3ff" opacity="0.20"/>
+          <!-- Parmaklar: işaret -->
+          <rect x="29" y="14" width="10" height="44" rx="5" fill="#5ab3ff" opacity="0.50"/>
+          <rect x="30" y="12" width="8"  height="6"  rx="3" fill="#7ecfff" opacity="0.30"/>
+          <!-- Orta parmak -->
+          <rect x="41" y="8"  width="10" height="48" rx="5" fill="#5ab3ff" opacity="0.55"/>
+          <rect x="42" y="6"  width="8"  height="6"  rx="3" fill="#7ecfff" opacity="0.30"/>
+          <!-- Yüzük parmağı -->
+          <rect x="53" y="12" width="10" height="44" rx="5" fill="#5ab3ff" opacity="0.50"/>
+          <rect x="54" y="10" width="8"  height="6"  rx="3" fill="#7ecfff" opacity="0.30"/>
+          <!-- Serçe -->
+          <rect x="65" y="20" width="8"  height="36" rx="4" fill="#5ab3ff" opacity="0.45"/>
+          <rect x="66" y="18" width="6"  height="5"  rx="2" fill="#7ecfff" opacity="0.30"/>
+          <!-- Başparmak -->
+          <rect x="14" y="44" width="8"  height="28" rx="4" fill="#5ab3ff" opacity="0.45" transform="rotate(-18 18 58)"/>
+          <rect x="12" y="42" width="7"  height="5"  rx="2" fill="#7ecfff" opacity="0.30" transform="rotate(-18 15 44)"/>
+          <!-- Kemik eklem çizgileri -->
+          <line x1="29" y1="38" x2="39" y2="38" stroke="#7ecfff" stroke-width="0.8" opacity="0.40"/>
+          <line x1="41" y1="34" x2="51" y2="34" stroke="#7ecfff" stroke-width="0.8" opacity="0.40"/>
+          <line x1="53" y1="36" x2="63" y2="36" stroke="#7ecfff" stroke-width="0.8" opacity="0.40"/>
+          <line x1="65" y1="40" x2="73" y2="40" stroke="#7ecfff" stroke-width="0.8" opacity="0.35"/>
+          <!-- Genel parlama efekti -->
+          <ellipse cx="50" cy="55" rx="22" ry="30" fill="url(#glow)" opacity="0.08"/>
+          <defs>
+            <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#5ab3ff"/>
+              <stop offset="100%" stop-color="transparent"/>
+            </radialGradient>
+          </defs>
+        </svg>
+      </div>
+      <p><strong>Tıkla veya sürükle</strong> bırak</p>
+      <p style="margin-top:6px">PNG · JPG · BMP · TIFF</p>
+    </div>
+    <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.bmp,.tiff,.tif" />
+
+    <div id="preview-wrap">
+      <img id="previewImg" src="" alt="Önizleme" />
+      <div id="preview-name"></div>
+    </div>
+
+    <div class="gender-group" style="margin-top:20px">
+      <button class="gender-btn" id="btnMale" onclick="selectGender('male')">
+        <span class="g-icon">👦</span>Erkek
+      </button>
+      <button class="gender-btn" id="btnFemale" onclick="selectGender('female')">
+        <span class="g-icon">👧</span>Kız
+      </button>
+    </div>
+
+    <button id="analyzeBtn" onclick="analyze()" disabled>Analiz Et</button>
+  </div>
+
+  <!-- Right: Results panel -->
+  <div class="right-panel">
+    <div class="card" id="resultCard">
+      <!-- Placeholder -->
+      <div id="placeholder">
+        <div class="ph-icon">🩻</div>
+        <p>Röntgen görüntüsü yükleyip analiz edin</p>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading">
+        <div style="text-align:center">
+          <div class="spinner" style="margin:0 auto 16px"></div>
+          <p style="color:#5ab3ff;font-size:0.9rem">Model analiz yapıyor...</p>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-box"></div>
+
+      <!-- Results -->
+      <div id="results">
+        <h2>📊 Analiz Sonuçları</h2>
+
+        <div class="result-grid">
+          <div class="result-box highlight">
+            <div class="label">Kemik Yaşı</div>
+            <div class="value" id="r-age">—</div>
+            <div class="sub" id="r-age-months"></div>
+          </div>
+          <div class="result-box">
+            <div class="label">Kalan Büyüme</div>
+            <div class="value" id="r-remain">—</div>
+            <div class="sub" id="r-closure"></div>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>İskelet Olgunluğu</span>
+            <span id="r-pct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="r-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="stage-box">
+          <div class="stage-name" id="r-stage">—</div>
+          <div class="stage-desc" id="r-stage-desc">—</div>
+        </div>
+
+        <img id="reportImg" src="" alt="Detaylı rapor" style="display:none" />
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  ⚠️ Bu sistem yalnızca klinik karar desteği amacıyla tasarlanmıştır.
+  Kesin tanı için uzman hekim değerlendirmesi gereklidir.
+</footer>
+
+<script>
+  let selectedGender = null;
+  let hasFile = false;
+
+  // ── Drag & drop ──
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    hasFile = true;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('previewImg').src = ev.target.result;
+      document.getElementById('preview-name').textContent = file.name;
+      document.getElementById('preview-wrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    updateBtn();
+  }
+
+  function selectGender(g) {
+    selectedGender = g;
+    document.getElementById('btnMale').classList.toggle('selected', g === 'male');
+    document.getElementById('btnFemale').classList.toggle('selected', g === 'female');
+    updateBtn();
+  }
+
+  function updateBtn() {
+    document.getElementById('analyzeBtn').disabled = !(hasFile && selectedGender);
+  }
+
+  // ── Analyze ──
+  async function analyze() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file || !selectedGender) return;
+
+    showState('loading');
+
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('gender', selectedGender);
+
+    try {
+      const resp = await fetch('/predict', { method: 'POST', body: fd });
+      const data = await resp.json();
+
+      if (!resp.ok || data.error) {
+        showError(data.error || 'Bilinmeyen hata');
+        return;
+      }
+      showResults(data);
+    } catch (err) {
+      showError('Sunucuya bağlanılamadı: ' + err.message);
+    }
+  }
+
+  function showState(state) {
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('loading').style.display     = state === 'loading' ? 'flex' : 'none';
+    document.getElementById('error-box').style.display   = 'none';
+    document.getElementById('results').style.display     = 'none';
+  }
+
+  function showError(msg) {
+    document.getElementById('loading').style.display    = 'none';
+    const eb = document.getElementById('error-box');
+    eb.style.display = 'block';
+    eb.textContent   = '⚠️ ' + msg;
+  }
+
+  function showResults(d) {
+    document.getElementById('loading').style.display  = 'none';
+    document.getElementById('results').style.display  = 'block';
+
+    document.getElementById('r-age').textContent        = d.bone_age_str;
+    document.getElementById('r-age-months').textContent = d.bone_age_months + ' ay · ' + d.gender;
+    document.getElementById('r-remain').textContent     = d.remaining_str;
+    document.getElementById('r-closure').textContent    = 'Est. kapanma: ~' + d.closure_str;
+    document.getElementById('r-pct').textContent        = d.pct_complete + '%';
+    document.getElementById('r-bar').style.width        = d.pct_complete + '%';
+    document.getElementById('r-stage').textContent      = d.stage_name;
+    document.getElementById('r-stage-desc').textContent = d.stage_desc;
+
+    if (d.report_image) {
+      const img = document.getElementById('reportImg');
+      img.src           = 'data:image/png;base64,' + d.report_image;
+      img.style.display = 'block';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+KEMİK YAŞI SİSTEMİ — BAŞARIM DEĞERLENDİRME RAPORU
+=================================================================
+
+Model         : EfficientNetB0
+Test seti     : 29 görüntü (tümü erkek)
+
+MAE           : 9.56 ay (0.80 yıl)
+RMSE          : 11.10 ay
+Bias          : +2.41 ay
+Korelasyon    : 0.991
+±1 yıl doğru  : 58.6%
+±2 yıl doğru  : 100.0%
+
+Dosya                       Gerçek   Tahmin     Hata
+-------------------------------------------------------
+  8ayerkek.jpg                   8     15.5     +7.5
+  10ayerkek.jpg                 10     16.1     +6.1
+  12ayerkek.jpg                 12     18.7     +6.7
+  14ayerkek.jpg                 14     17.4     +3.4
+  16ayerkek.jpg                 16     15.3     -0.7
+  18ayerkek.jpg                 18     20.6     +2.6
+  20ayerkek.jpg                 20     20.6     +0.6
+  24ayerkek.jpg                 24     37.0    +13.0
+  28ayerkek.jpg                 28     38.5    +10.5
+  30ayerkek.jpg                 30     45.0    +15.0
+  3yaserkek.jpg                 36     48.9    +12.9
+  3bucukyaserkek.jpg            42     56.5    +14.5
+  4yaserkek.jpg                 48     45.0     -3.0
+  4bucukyaserkek.jpg            54     57.2     +3.2
+  5yaserkek.jpg                 60     69.1     +9.1
+  5bucukyaserkek.jpg            66     82.1    +16.1
+  6yaserkek.jpg                 72     85.4    +13.4
+  7yaserkek.jpg                 84     99.3    +15.3
+  8yaserkek.jpg                 96    114.6    +18.6
+  9yaserkek.jpg                108    105.6     -2.4
+  10yaserkek.jpg               120    125.0     +5.0
+  11yaserkek.jpg               132    124.0     -8.0
+  12yaserkek.jpg               144    126.0    -18.0
+  13yaserkek.jpg               156    138.2    -17.8
+  14yaserkek.jpg               168    157.0    -11.0
+  15yaserkek.jpg               180    176.2     -3.8
+  16yaserkek.jpg               192    175.1    -16.9
+  17yaserkek.jpg               204    195.8     -8.2
+  18yaserkek.jpg               216    202.2    -13.8

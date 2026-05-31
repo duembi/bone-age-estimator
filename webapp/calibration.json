@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "lo": 0,
+      "hi": 24,
+      "correction": 4.24
+    },
+    {
+      "lo": 24,
+      "hi": 72,
+      "correction": -3.92
+    },
+    {
+      "lo": 72,
+      "hi": 144,
+      "correction": -4.59
+    },
+    {
+      "lo": 144,
+      "hi": 999,
+      "correction": 4.73
+    }
+  ],
+  "linear": {
+    "slope": 1.126005,
+    "intercept": -19.7894
+  },
+  "fitted": true
+}
